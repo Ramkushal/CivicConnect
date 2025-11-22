@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          String    @default("citizen") // citizen, officer, admin
+  profile_photo String?
+  created_at    DateTime  @default(now())
+  
+  // Relations
+  officerProfile Officer?
+  issues         Issue[]
+  comments       Comment[]
+}
+
+model Officer {
+  id                   String    @id @default(uuid())
+  user_id              String    @unique
+  department           String
+  designation          String
+  ward                 String
+  stats                Json?     // { solved: 0, rating: 0 }
+  
+  // Relations
+  user                 User      @relation(fields: [user_id], references: [id])
+  assignments          Assignment[]
+  resolutions          Resolution[]
+}
+
+model Issue {
+  id          BigInt    @id @default(autoincrement())
+  user_id     String
+  title       String
+  description String
+  category    String
+  status      String    @default("open") // open, in_progress, resolved
+  priority    String    @default("medium")
+  latitude    Float
+  longitude   Float
+  image_url   String?
+  upvotes     Int       @default(0)
+  created_at  DateTime  @default(now())
+
+  // Relations
+  user        User      @relation(fields: [user_id], references: [id])
+  assignments Assignment[]
+  comments    Comment[]
+  resolutions Resolution[]
+}
+
+model Assignment {
+  id          String    @id @default(uuid())
+  issue_id    BigInt
+  officer_id  String
+  assigned_at DateTime  @default(now())
+  status      String    @default("active")
+
+  // Relations
+  issue       Issue     @relation(fields: [issue_id], references: [id])
+  officer     Officer   @relation(fields: [officer_id], references: [id])
+}
+
+model Comment {
+  id         String    @id @default(uuid())
+  issue_id   BigInt
+  user_id    String
+  content    String
+  created_at DateTime  @default(now())
+
+  // Relations
+  issue      Issue     @relation(fields: [issue_id], references: [id])
+  user       User      @relation(fields: [user_id], references: [id])
+}
+
+model Resolution {
+  id              String    @id @default(uuid())
+  issue_id        BigInt
+  officer_id      String
+  resolution_note String
+  proof_image_url String?
+  resolved_at     DateTime  @default(now())
+
+  // Relations
+  issue           Issue     @relation(fields: [issue_id], references: [id])
+  officer         Officer   @relation(fields: [officer_id], references: [id])
+}
