@@ -170,9 +170,9 @@ const IssueDetail = () => {
       text: newComment.trim(),
       created_at: new Date().toISOString(),
       users: {
-        name: user.user_metadata.name,
-        role: user.user_metadata.role,
-        profile_photo: user.user_metadata.profile_photo
+        name: user.name,
+        role: user.role,
+        profile_photo: user.profile_photo
       }
     };
 
@@ -194,9 +194,9 @@ const IssueDetail = () => {
         text: newResolutionComment.trim(),
         created_at: new Date().toISOString(),
         users: {
-            name: user.user_metadata.name,
-            role: user.user_metadata.role,
-            profile_photo: user.user_metadata.profile_photo
+            name: user.name,
+            role: user.role,
+            profile_photo: user.profile_photo
         }
     };
       
@@ -296,7 +296,7 @@ const IssueDetail = () => {
 
   const currentStepIndex = statusSteps.findIndex(step => step.status === issue.status);
 
-  const isOfficer = user?.user_metadata?.role === 'officer' || user?.user_metadata?.role === 'admin';
+  const isOfficer = user?.role === 'officer' || user?.role === 'admin';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-8 relative">

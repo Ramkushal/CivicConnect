@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { mockUsers } from './mockData';
+import client from '../api/client';
 
 const AuthContext = createContext();
 
@@ -8,59 +8,61 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session from localStorage
-    const storedUser = localStorage.getItem('mock_user_session');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    checkUserLoggedIn();
   }, []);
 
+  const checkUserLoggedIn = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const { data } = await client.get('/auth/me');
+        setUser(data);
+      } catch (error) {
+        console.error('Session expired or invalid:', error);
+        localStorage.removeItem('token');
+        setUser(null);
+      }
+    }
+    setLoading(false);
+  };
+
   const signUp = async (email, password, metadata) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const newUser = {
-      id: `u${Math.floor(Math.random() * 10000)}`,
-      email,
-      user_metadata: metadata,
-      created_at: new Date().toISOString()
-    };
-
-    // In a real app we'd add to mockUsers, but for now just log in
-    setUser(newUser);
-    localStorage.setItem('mock_user_session', JSON.stringify(newUser));
-    return { data: { user: newUser }, error: null };
+    try {
+      const { data } = await client.post('/auth/register', {
+        email,
+        password,
+        ...metadata
+      });
+      
+      localStorage.setItem('token', data.token);
+      setUser(data);
+      return { data: { user: data }, error: null };
+    } catch (error) {
+      return { 
+        data: null, 
+        error: { message: error.response?.data?.message || 'Registration failed' } 
+      };
+    }
   };
 
   const signIn = async (email, password) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const foundUser = mockUsers.find(u => u.email === email);
-
-    if (foundUser) {
-      // Transform to match Supabase user structure
-      const sessionUser = {
-        id: foundUser.id,
-        email: foundUser.email,
-        user_metadata: {
-          name: foundUser.name,
-          role: foundUser.role,
-          profile_photo: foundUser.profile_photo
-        }
+    try {
+      const { data } = await client.post('/auth/login', { email, password });
+      
+      localStorage.setItem('token', data.token);
+      setUser(data);
+      return { data: { user: data }, error: null };
+    } catch (error) {
+      return { 
+        data: null, 
+        error: { message: error.response?.data?.message || 'Login failed' } 
       };
-      setUser(sessionUser);
-      localStorage.setItem('mock_user_session', JSON.stringify(sessionUser));
-      return { data: { user: sessionUser }, error: null };
-    } else {
-      return { data: null, error: { message: "Invalid credentials" } };
     }
   };
 
   const signOut = async () => {
+    localStorage.removeItem('token');
     setUser(null);
-    localStorage.removeItem('mock_user_session');
     return { error: null };
   };
 

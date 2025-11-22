@@ -12,10 +12,10 @@ dist
 dist-ssr
 *.local
 passwords.txt
-.env
-DATABASE.md
-PROJECT_OVERVIEW.md
-IMPLEMENTATION_ROADMAP.md
+# .env
+# DATABASE.md
+# PROJECT_OVERVIEW.md
+# IMPLEMENTATION_ROADMAP.md
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

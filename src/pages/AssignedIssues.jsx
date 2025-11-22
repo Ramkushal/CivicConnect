@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ClipboardList } from 'lucide-react';
 import IssueCard from '../components/IssueCard';
 import { useAuth } from '../context/AuthContext';
-import { mockAssignments, mockIssues, mockOfficers } from '../context/mockData';
+import client from '../api/client';
 
 const AssignedIssues = () => {
   const { user } = useAuth();
@@ -19,27 +19,17 @@ const AssignedIssues = () => {
   const fetchAssignments = async () => {
     try {
       setLoading(true);
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // 1. Find the officer record for the current user
-      const officerRecord = mockOfficers.find(o => o.user_id === user.id);
-
-      if (!officerRecord) {
-        // Not an officer or not found in officer list
-        setAssignedIssues([]);
-        setLoading(false);
-        return;
-      }
-
-      // 2. Find assignments for this officer
-      const myAssignments = mockAssignments.filter(a => a.officer_id === officerRecord.id);
-
-      // 3. Get the full issue details
-      const issues = myAssignments.map(a => {
-        const issue = mockIssues.find(i => i.id === a.issue_id);
-        return issue ? { ...issue, assignment_status: a.status } : null;
-      }).filter(i => i !== null);
+      const { data } = await client.get('/assignments/my-assignments');
+      
+      // Transform API response to match IssueCard expectations if needed
+      // The API returns assignments with included issue details
+      // We need to flatten this or update IssueCard. 
+      // Let's map it to look like an issue object with assignment status
+      const issues = data.map(assignment => ({
+        ...assignment.issue,
+        assignment_status: assignment.status,
+        assignment_id: assignment.id
+      }));
 
       setAssignedIssues(issues);
     } catch (error) {
@@ -49,7 +39,7 @@ const AssignedIssues = () => {
     }
   };
 
-  if (!user || user.user_metadata?.role !== 'officer') {
+  if (!user || user.role !== 'officer') {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900">Access Denied</h2>

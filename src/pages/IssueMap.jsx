@@ -54,8 +54,8 @@ const IssueMap = () => {
   const [userArea, setUserArea] = useState('');
 
   useEffect(() => {
-    if (user?.user_metadata?.area) {
-        setUserArea(user.user_metadata.area);
+    if (user?.area) {
+        setUserArea(user.area);
     } else if (user) {
         // Try to fetch from public.users if not in metadata (though we usually sync)
         // For now assume metadata is source of truth or we'd need a fetch here

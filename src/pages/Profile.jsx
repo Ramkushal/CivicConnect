@@ -30,35 +30,25 @@ const Profile = () => {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
-
   const fetchProfile = async () => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // In mock mode, user object from AuthContext has the metadata
     if (user) {
-        const userData = {
-            id: user.id,
-            name: user.user_metadata?.name || 'User',
-            email: user.email,
-            phone: user.user_metadata?.phone || '',
-            area: user.user_metadata?.area || '',
-            role: user.user_metadata?.role || 'citizen',
-            department: user.user_metadata?.department || '',
-            profile_photo: user.user_metadata?.profile_photo || ''
-        };
-        setProfile(userData);
-        setFormData({
-            name: userData.name,
-            phone: userData.phone,
-            area: userData.area,
-            profile_photo: userData.profile_photo
-        });
+      const userData = {
+        id: user.id,
+        name: user.name || 'User',
+        email: user.email,
+        phone: user.phone || '',
+        area: user.area || '',
+        role: user.role || 'citizen',
+        department: user.department || '',
+        profile_photo: user.profile_photo || ''
+      };
+      setProfile(userData);
+      setFormData({
+        name: userData.name,
+        phone: userData.phone,
+        area: userData.area,
+        profile_photo: userData.profile_photo
+      });
     }
     setLoading(false);
   };

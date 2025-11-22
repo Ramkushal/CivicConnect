@@ -106,63 +106,54 @@ const ReportIssue = () => {
     }
   };
 
-  const uploadImage = async (file) => {
-    // Mock Upload
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // Return the local preview URL as the "uploaded" URL for mock purposes
-    return URL.createObjectURL(file);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     setSubmitting(true);
 
     try {
-        let photo_url = null;
+        const submissionData = new FormData();
+        submissionData.append('category', formData.category);
+        submissionData.append('title', `${formData.category} Issue at ${formData.location.substring(0, 20)}...`);
+        submissionData.append('description', formData.description);
+        submissionData.append('priority', formData.severity.toLowerCase()); // API expects lowercase
+        submissionData.append('address', formData.location);
+        submissionData.append('ward', formData.ward);
+        submissionData.append('area', formData.area);
+        
         if (formData.image) {
-            photo_url = await uploadImage(formData.image);
+            submissionData.append('image', formData.image);
         }
 
-        const newIssue = {
-            user_id: user ? user.id : null, // Handle anonymous user
-            category: formData.category,
-            title: `${formData.category} Issue at ${formData.location.substring(0, 20)}...`, // Auto-generate title
-            description: formData.description,
-            priority: formData.severity, // Mapping form severity to db priority
-            location: null, 
-            address: formData.location,
-            ward: formData.ward,
-            area: formData.area,
-            photo_url: photo_url,
-            status: 'Pending'
-        };
-
         if (formData.latitude && formData.longitude) {
-             // Use WKT (Well-Known Text) format for PostGIS
-             newIssue.location = `POINT(${formData.longitude} ${formData.latitude})`;
+             submissionData.append('latitude', formData.latitude);
+             submissionData.append('longitude', formData.longitude);
         } else {
-            // Fallback for manual entry or legacy format
+            // Fallback for manual entry parsing
             const latLongMatch = formData.location.match(/Lat: ([0-9.-]+), Long: ([0-9.-]+)/);
             if (latLongMatch) {
-                const lat = parseFloat(latLongMatch[1]);
-                const long = parseFloat(latLongMatch[2]);
-                newIssue.location = `POINT(${long} ${lat})`; 
+                submissionData.append('latitude', latLongMatch[1]);
+                submissionData.append('longitude', latLongMatch[2]);
+            } else {
+                // Default or error handling if location is mandatory
+                // For now, let's assume 0,0 or handle in backend
+                 submissionData.append('latitude', 0);
+                 submissionData.append('longitude', 0);
             }
         }
 
-        const { success, error } = await createIssue(newIssue);
+        const { success, error } = await createIssue(submissionData);
 
         if (success) {
-            alert('Issue Reported Successfully! (Mock)');
+            alert('Issue Reported Successfully!');
             navigate('/');
         } else {
-            throw error;
+            throw new Error(error);
         }
 
     } catch (error) {
         console.error('Error submitting issue:', error);
-        alert('Failed to report issue. Please try again.');
+        alert(`Failed to report issue: ${error.message}`);
     } finally {
         setSubmitting(false);
     }

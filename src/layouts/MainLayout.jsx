@@ -32,7 +32,7 @@ const Navbar = () => {
               <Upload className="h-6 w-6" />
             </Link>
             
-            {user?.user_metadata?.role === 'officer' && (
+            {user?.role === 'officer' && (
               <Link to="/assigned-issues" className="p-2 text-gray-600 hover:text-blue-600 transition-colors" title="My Assignments">
                 <ClipboardList className="h-6 w-6" />
               </Link>

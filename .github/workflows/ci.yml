@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: civic_connect_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: server/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./server
+      run: npm ci
+
+    - name: Generate Prisma Client
+      working-directory: ./server
+      run: npx prisma generate
+
+    - name: Run Migrations
+      working-directory: ./server
+      env:
+        DATABASE_URL: postgres://postgres:password@localhost:5432/civic_connect_test
+      run: npx prisma migrate deploy
+
+    - name: Run Tests
+      working-directory: ./server
+      env:
+        DATABASE_URL: postgres://postgres:password@localhost:5432/civic_connect_test
+        JWT_SECRET: testsecret
+      run: npm test
