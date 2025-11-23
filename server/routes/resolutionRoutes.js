@@ -61,11 +61,7 @@ router.post('/', protect, authorize('officer'), async (req, res) => {
     });
 
     // Notify the user
-    req.io.emit(`issue_status_update_${issue_id}`, {
-      status: 'resolved',
-      message: 'Your issue has been resolved',
-      resolution_note,
-    });
+    // Socket.io removed for serverless compatibility
 
     // BigInt fix
     const resolutionString = JSON.stringify(resolution, (key, value) =>

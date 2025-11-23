@@ -9,7 +9,12 @@ const upload = require('../middleware/uploadMiddleware');
 // @access  Private
 router.post('/', protect, upload.single('image'), async (req, res) => {
   const { title, description, category, priority, latitude, longitude } = req.body;
-  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+  let image_url = null;
+  if (req.file) {
+    const b64 = Buffer.from(req.file.buffer).toString('base64');
+    let mime = req.file.mimetype;
+    image_url = `data:${mime};base64,${b64}`;
+  }
 
   if (!title || !description || !category || !latitude || !longitude) {
     return res.status(400).json({ message: 'Please add all required fields' });
@@ -30,9 +35,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
       },
     });
 
-    // Emit event to officers in the same ward (or general 'officers' room)
-    // For simplicity, broadcasting to all for now, or a specific topic
-    req.io.emit('issue_reported', issue);
+    // Socket.io removed for serverless compatibility
 
     res.status(201).json(issue);
   } catch (error) {
