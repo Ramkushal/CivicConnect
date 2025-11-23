@@ -61,8 +61,15 @@ io.on('connection', (socket) => {
 });
 
 // Health Check
-app.get('/', (req, res) => {
-  res.json({ message: 'CivicConnect API is running' });
+app.get('/', async (req, res) => {
+  try {
+    // Try to connect to DB
+    await require('./prisma/client').$queryRaw`SELECT 1`;
+    res.json({ message: 'CivicConnect API is running', db: 'connected' });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    res.status(500).json({ message: 'API running but DB failed', error: error.message });
+  }
 });
 
 // Error Handling Middleware
