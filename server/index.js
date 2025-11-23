@@ -12,16 +12,9 @@ const assignmentRoutes = require('./routes/assignmentRoutes');
 const resolutionRoutes = require('./routes/resolutionRoutes');
 
 const http = require('http');
-const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: '*', // Allow all origins for now, restrict in production
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  },
-});
 
 const PORT = process.env.PORT || 5000;
 
@@ -30,13 +23,6 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
-
-// Make io accessible in routes
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -45,20 +31,6 @@ app.use('/api/officers', officerRoutes);
 app.use('/api/issues', issueRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/resolutions', resolutionRoutes);
-
-// Socket.io Connection
-io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
-
-  socket.on('join_room', (room) => {
-    socket.join(room);
-    console.log(`User ${socket.id} joined room: ${room}`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});
 
 // Health Check
 app.get('/', async (req, res) => {
